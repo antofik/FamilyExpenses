@@ -85,9 +85,16 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\NullableDoubleToStringConverter.cs" />
+    <Compile Include="CoreModules\Core.cs" />
+    <Compile Include="CoreModules\RelayCommand.cs" />
+    <Compile Include="CoreModules\StorageImpl.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\Entry.cs" />
+    <Compile Include="Models\History.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>

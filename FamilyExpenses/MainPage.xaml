@@ -5,20 +5,109 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="using:FamilyExpenses.ViewModels"
+    xmlns:converters="using:FamilyExpenses.Converters"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <FrameworkElement.DataContext>
+        <viewModels:MainPageViewModel />
+    </FrameworkElement.DataContext>
 
-    <Grid>
-        <Grid.DataContext>
-            <viewModels:MainPageViewModel />
-        </Grid.DataContext>
+    <Pivot x:Name="pivot" SelectionChanged="Pivot_OnSelectionChanged">
+        <PivotItem Header="Добавить">
+            <Grid Margin="0">
+                <Grid.Resources>
+                    <converters:NullableDoubleToStringConverter x:Key="NullableDoubleToStringConverter" />
+                </Grid.Resources>
 
-        <Pivot x:Uid="Pivot" x:Name="pivot" CommonNavigationTransitionInfo.IsStaggerElement="True" SelectionChanged="Pivot_OnSelectionChanged">
-            <PivotItem Header="New">
-                <TextBox InputScope="Number" Text="" Margin="8,0" />
-            </PivotItem>
-            <PivotItem Header="1              2"></PivotItem>
-            
-        </Pivot>
-    </Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="300" x:Name="row" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox 
+                        x:Name="txtCost"
+                        AcceptsReturn="False"
+                        PlaceholderText="Cost"
+                        x:FieldModifier="internal"
+                        InputScope="Number" 
+                        FontSize="{StaticResource TextStyleExtraLargeFontSize}" 
+                        Margin="4,0" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Stretch" 
+                        Text="{Binding Cost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource NullableDoubleToStringConverter}}"
+                        />
+                    <Button 
+                        Content="Сохранить" 
+                        Grid.Column="1" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Stretch" 
+                        Margin="4,0" 
+                        Command="{Binding SaveCommand}"
+                        />
+                </Grid>
+                <ListBox 
+                    x:Name="list"
+                    IsTabStop="False"            
+                    Grid.Row="2"
+                    ItemsSource="{Binding Categories}" 
+                    DisplayMemberPath="Name" 
+                    SelectionMode="Single" 
+                    FontSize="{StaticResource TextStyleExtraLargeFontSize}" 
+                    x:FieldModifier="internal"
+                    Margin="4,0"
+                    Background="Transparent"
+                    Foreground="White"
+                    >
+                </ListBox>
+            </Grid>
+        </PivotItem>
+        
+        <PivotItem Header="История" x:Name="itemHistory">
+            <ListView ItemsSource="{Binding ExpensesHistory}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,24">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <TextBlock Text="{Binding Month}" FontSize="48" VerticalAlignment="Top" Margin="0,0,0,4" />
+                                <!--<TextBlock Text="{Binding Year}" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,10,0,0" />-->
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Expenses}" Grid.Row="1" Opacity="0.8"  FontSize="{StaticResource TextStyleExtraLargeFontSize}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock MinWidth="100" VerticalAlignment="Center">
+                                                <Run Text="{Binding Cost}" /><Run Text="р." />
+                                            </TextBlock>
+                                            <TextBlock Text=" "  />
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border Grid.Row="2" HorizontalAlignment="Stretch" BorderBrush="GhostWhite" BorderThickness="1" Opacity="0.4" Margin="0,8,0,0" Width="1000" />
+                            <TextBlock Grid.Row="3" Style="{StaticResource SubheaderTextBlockStyle}" HorizontalAlignment="Right">
+                                <Run Text="Всего: " /><Run Text="{Binding Total}" FontWeight="Bold" /><Run Text="р." />
+                            </TextBlock>
+                            <Border Grid.Row="4" HorizontalAlignment="Stretch" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,8,0,0" Width="1000" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </PivotItem>
+    </Pivot>
+
+    
 </Page>

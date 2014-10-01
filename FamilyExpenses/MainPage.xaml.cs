@@ -1,50 +1,57 @@
-﻿using System.Diagnostics;
+﻿using System;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
+using FamilyExpenses.ViewModels;
 
 namespace FamilyExpenses
 {
-    /// <summary>
-    ///     An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
         public MainPage()
         {
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
-        }
+            Loaded += delegate
+            {
+                var viewmodel = new MainPageViewModel();
+                viewmodel.Initialize(this);
+                DataContext = viewmodel;
 
-        /// <summary>
-        ///     Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">
-        ///     Event data that describes how this page was reached.
-        ///     This parameter is typically used to configure the page.
-        /// </param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            // TODO: Prepare page for display here.
+                txtCost.Focus(FocusState.Programmatic);
 
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+          //      list.SelectionChanged += delegate { viewmodel.SaveCommand.Execute(null); };
+            };
+
+            txtCost.GotFocus += delegate { row.Height = new GridLength(300); };
+            txtCost.LostFocus += delegate { row.Height = new GridLength(0); };
+            pivot.PivotItemLoaded += delegate
+            {
+                if (pivot.SelectedItem != itemHistory)
+                    txtCost.Focus(FocusState.Programmatic);
+            };
         }
 
         private void Pivot_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (pivot.SelectedIndex == pivot.Items.Count - 1)
+            if (pivot.SelectedItem == itemHistory)
+                UpdateHistory();
+            else
             {
-                var item = new PivotItem();
-                item.Header = "temp";
-                pivot.Items.Insert(pivot.SelectedIndex, item);
-                pivot.SelectedIndex -= 1;
+                /*var timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(1)};
+                timer.Tick += delegate
+                {
+                    timer.Stop();
+                    txtCost.Focus(FocusState.Programmatic);
+                };
+                timer.Start();
+                */
             }
+        }
+
+        private void UpdateHistory()
+        {
+
         }
     }
 }
