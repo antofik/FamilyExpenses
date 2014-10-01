@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="FamilyExpenses.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:FamilyExpenses.ViewModels"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.DataContext>
+            <viewModels:MainPageViewModel />
+        </Grid.DataContext>
+
+        <Pivot x:Uid="Pivot" x:Name="pivot" CommonNavigationTransitionInfo.IsStaggerElement="True" SelectionChanged="Pivot_OnSelectionChanged">
+            <PivotItem Header="New">
+                <TextBox InputScope="Number" Text="" Margin="8,0" />
+            </PivotItem>
+            <PivotItem Header="1              2"></PivotItem>
+            
+        </Pivot>
+    </Grid>
+</Page>
