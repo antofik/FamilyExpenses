@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Animation;
@@ -22,7 +24,6 @@ namespace FamilyExpenses
                     var viewmodel = new MainPageViewModel();
                     viewmodel.Initialize(this);
                     DataContext = viewmodel;
-
                 };
             }
             catch (Exception ex)

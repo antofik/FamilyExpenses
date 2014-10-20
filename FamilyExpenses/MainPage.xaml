@@ -8,21 +8,22 @@
     xmlns:converters="using:FamilyExpenses.Converters"
     xmlns:familyExpenses="using:FamilyExpenses"
     mc:Ignorable="d"
+    
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.BottomAppBar>
         <CommandBar ClosedDisplayMode="Minimal">
-            <!--            <CommandBar.PrimaryCommands>
-                <AppBarButton IsCompact="True" Command="{Binding SettingsCommand}">
+            <CommandBar.PrimaryCommands>
+                <AppBarButton IsCompact="True" Command="{Binding SettingsCommand}" Label="Settings">
                     <AppBarButton.Icon>
                         <SymbolIcon Symbol="Setting" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton IsCompact="True" Command="{Binding SyncCommand}">
+                <AppBarButton IsCompact="True" Command="{Binding SyncCommand}" Label="Sync">
                     <AppBarButton.Icon>
                         <SymbolIcon Symbol="Sync" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-            </CommandBar.PrimaryCommands> -->
+            </CommandBar.PrimaryCommands> 
             <CommandBar.SecondaryCommands>
                 <AppBarButton Label="Settings" Command="{Binding SettingsCommand}" />
             </CommandBar.SecondaryCommands>
@@ -31,7 +32,7 @@
     <FrameworkElement.DataContext>
         <viewModels:MainPageViewModel />
     </FrameworkElement.DataContext>
-
+                                                                               
     <Pivot x:Name="pivot">
         <PivotItem Header="Добавить">
             <Grid Margin="0">

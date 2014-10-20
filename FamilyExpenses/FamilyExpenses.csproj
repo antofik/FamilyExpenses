@@ -96,6 +96,7 @@
     <Compile Include="Common\RelayCommand.cs" />
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Converters\NullableDoubleToStringConverter.cs" />
+    <Compile Include="CoreModules\BusyImpl.cs" />
     <Compile Include="CoreModules\Core.cs" />
     <Compile Include="CoreModules\RelayCommand.cs" />
     <Compile Include="CoreModules\StorageImpl.cs" />

@@ -28,6 +28,6 @@
             <Image Source="Images/save.png" Stretch="None" />
         </Button>
         <TextBlock TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Text="Придумайте уникальный пароль и раздайте его всем членам семьи. Тогда у всех вас будет общая статистика" />
-        <TextBlock Margin="0,24" TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3" Text="Оставьте поле пустым, и приложение не бдует использовать синхронизацию через интернет" />
+        <TextBlock Margin="0,24" TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3" Text="Оставьте поле пустым, и приложение не будет использовать синхронизацию через интернет" />
     </Grid>
 </UserControl>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +11,8 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.System.Profile;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using FamilyExpenses.Models;
 
 namespace FamilyExpenses.CoreModules
@@ -24,7 +27,11 @@ namespace FamilyExpenses.CoreModules
 
         public static readonly StorageImpl Storage = new StorageImpl();
 
+        public static readonly BusyImpl Busy = new BusyImpl();
+
         public static readonly string PhoneId = string.Join("", HardwareIdentification.GetPackageSpecificToken(null).Id.ToArray().Select(c => c.ToString("X")));
+
+        private static StatusBar _statusBar = StatusBar.GetForCurrentView();
 
         #region Categories
 
@@ -38,17 +45,17 @@ namespace FamilyExpenses.CoreModules
         private static ObservableCollection<Entry> _entries = new ObservableCollection<Entry>();
         public static ObservableCollection<Entry> Entries { get { return _entries; } set { _entries = value; } }
 
-        public static string FamilyPassword = "";
-
         public static void UpdateFamilyPassword(string value)
         {
             Task.Run(() => _updatePassword(value));
 
         }
 
-        #endregion
+        public static event Action Updated = delegate{};
 
-        public static long Revision = -1;
+        #endregion
+        
+        public static CoreDispatcher Dispatcher;
 
         private static readonly object _syncRoot = new Object();
         private static bool _syncronizing;
@@ -62,10 +69,15 @@ namespace FamilyExpenses.CoreModules
                 {new StringContent(PhoneId), "PhoneId"},
                 {new StringContent(value), "FamilyPassword"},
             };
+
+            Busy.Set(BusyModes.UpdateFamilyPassword);
             var result = await client.PostAsync(new Uri(Server + "/family-expenses/change-family"), content);
+            Busy.Clear(BusyModes.UpdateFamilyPassword);
+
             if (result.IsSuccessStatusCode)
             {
-                FamilyPassword = value;
+                Storage.FamilyPassword = value;
+                Storage.Revision = 0;
                 Syncronize();
             }
             else
@@ -76,7 +88,7 @@ namespace FamilyExpenses.CoreModules
         
         public static void Syncronize()
         {
-            if (string.IsNullOrWhiteSpace(FamilyPassword)) return;
+            if (string.IsNullOrWhiteSpace(Storage.FamilyPassword)) return;
             Task.Run(() => SyncronizeAsync());
         }
 
@@ -92,12 +104,18 @@ namespace FamilyExpenses.CoreModules
                 _syncronizeOnceMore = false;
                 _syncronizing = true;
             }
+
+
+            Busy.Set(BusyModes.Sync);
+
             await _syncronize();
             while (_syncronizeOnceMore)
             {
                 _syncronizeOnceMore = false;
                 await _syncronize();
             }
+            Busy.Clear(BusyModes.Sync);
+
             lock (_syncRoot)
             {
                 _syncronizing = false;
@@ -114,7 +132,7 @@ namespace FamilyExpenses.CoreModules
                     Id = c.Id,
                     Revision = c.Revision,
                     Owner = c.Owner,
-                    FamilyPassword = FamilyPassword,
+                    FamilyPassword = Storage.FamilyPassword,
                     Data = Storage.Serialize(c)
                 })
                 .ToList();
@@ -123,8 +141,8 @@ namespace FamilyExpenses.CoreModules
             var content = new MultipartFormDataContent
             {
                 {new StringContent(PhoneId), "PhoneId"},
-                {new StringContent(FamilyPassword), "FamilyPassword"},
-                {new StringContent(Revision.ToString()), "Revision"},
+                {new StringContent(Storage.FamilyPassword), "FamilyPassword"},
+                {new StringContent(Storage.Revision.ToString(CultureInfo.InvariantCulture)), "Revision"},
                 {new StringContent(data), "Data"},
             };
             var result = await client.PostAsync(new Uri(Server + "/family-expenses"), content);
@@ -132,6 +150,7 @@ namespace FamilyExpenses.CoreModules
             {
                 var json = await result.Content.ReadAsStringAsync();
                 var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
+                Storage.Revision = list.Revision;
                 foreach (var str in list.Data)
                 {
                     var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
@@ -151,6 +170,8 @@ namespace FamilyExpenses.CoreModules
                         Entries.Add(entry);
                     }
                 }
+                Storage.Save();
+                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
             }
             else
             {

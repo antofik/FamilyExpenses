@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -15,61 +16,57 @@ namespace FamilyExpenses.CoreModules
 {
     public class StorageImpl
     {
+        private readonly ApplicationDataContainer Settings = ApplicationData.Current.LocalSettings;
+
         public async void Load(Action callback)
         {
-            var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("entries", CreationCollisionOption.OpenIfExists);
-            using (var read = await file.OpenAsync(FileAccessMode.ReadWrite))
-            {
-                using (var stream = read.AsStreamForRead())
-                {
-                    try
-                    {
-                        var length = (int) stream.Length;
-                        var bytes = new byte[length];
-                        stream.Read(bytes, 0, length);
-
-                        Core.Entries = Deserialize<ObservableCollection<Entry>>(bytes) ??
-                                       new ObservableCollection<Entry>();
-                    }
-                    catch (Exception)
-                    {
-                        Core.Entries = new ObservableCollection<Entry>();
-                    }
-                    callback();
-
-                    Core.Syncronize();
-                }
-            }
+            var entries = Settings.Values["entries"] as byte[];
+            Core.Entries = Deserialize<ObservableCollection<Entry>>(entries) ?? new ObservableCollection<Entry>();
+            Core.Syncronize();
+            callback();
         }
 
         public void AddEntry(Entry entry)
         {
             Core.Entries.Add(entry);
             Save();
+            Core.Syncronize();
+            
+        }
+
+        public string FamilyPassword
+        {
+            get { return Settings.Values["FamilyPassword"] as string ?? ""; }
+            set { Settings.Values["FamilyPassword"] = value ?? ""; }
+        }
+
+        public double Revision
+        {
+            get { return (double) (Settings.Values["Revision"] ?? 0d); }
+            set { Settings.Values["Revision"] = value; }
         }
 
         public async void Save()
         {
             var value = Serialize((object)Core.Entries);
-            var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("entries", CreationCollisionOption.ReplaceExisting);
-            using (var read = await file.OpenAsync(FileAccessMode.ReadWrite))
-            {
-                using (var stream = read.AsStreamForWrite())
-                {
-                    stream.Write(value, 0, value.Length);
-                }
-            }
-            Core.Syncronize();
+            Settings.Values["Entries"] = value;
         }
 
         public T Deserialize<T>(byte[] bytes)
         {
-            var serializer = new DataContractJsonSerializer(typeof(T));
-            using (var stream = new MemoryStream(bytes))
+            try
             {
-                return (T) serializer.ReadObject(stream);
+                var serializer = new DataContractJsonSerializer(typeof (T));
+                using (var stream = new MemoryStream(bytes))
+                {
+                    return (T) serializer.ReadObject(stream);
+                }
             }
-
+            catch (Exception ex)
+            {
+                //TODO log
+                return default(T);
+            }
         }
 
         public string Serialize<T>(T obj) where T : class

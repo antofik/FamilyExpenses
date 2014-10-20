@@ -11,7 +11,7 @@ namespace FamilyExpenses
 
             Loaded += delegate
             {
-                txtPassword.Text = Core.FamilyPassword;
+                txtPassword.Text = Core.Storage.FamilyPassword;
             };
 
             cmdSave.Click += delegate

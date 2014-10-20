@@ -118,7 +118,7 @@ namespace FamilyExpenses.Models
 
         public bool Modified;
 
-        private static readonly DateTime Zero = new DateTime(1970,1,1).ToLocalTime();
+        public static readonly DateTime Zero = new DateTime(1970,1,1).ToLocalTime();
 
         [DataMember]
         public double Timestamp

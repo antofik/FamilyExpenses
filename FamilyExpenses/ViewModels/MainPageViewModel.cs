@@ -27,6 +27,7 @@ namespace FamilyExpenses.ViewModels
             foreach(var name in names.Split(new[]{';'}))
                 Categories.Add(new Category(name));
 #endif
+            Core.Updated += UpdateHistory;
         }
 
         public void Initialize(MainPage view)
@@ -197,7 +198,19 @@ namespace FamilyExpenses.ViewModels
         private MainPage _view;
 
         public ICommand SaveCommand { get { return new RelayCommand(Save); } }
-        public ICommand SyncCommand { get { return new RelayCommand(Sync); } }
+
+        public ICommand SyncCommand
+        {
+            get
+            {
+                return new RelayCommand(() =>
+                {
+                    Core.Storage.Revision = (DateTime.Now - Entry.Zero).TotalSeconds - TimeSpan.FromDays(3).TotalSeconds;
+                    Sync();
+                });
+            }
+        }
+
         public ICommand SettingsCommand { get { return new RelayCommand(Settings); } }
 
         #region INotifyPropertyChanged

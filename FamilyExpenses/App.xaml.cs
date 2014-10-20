@@ -4,11 +4,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Phone.UI.Input;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -19,6 +21,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
+using FamilyExpenses.CoreModules;
 
 namespace FamilyExpenses
 {
@@ -37,6 +40,13 @@ namespace FamilyExpenses
         {
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
+            this.Resuming += (s, e) => Core.Syncronize();
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+            Core.Syncronize();
         }
 
         /// <summary>
@@ -62,6 +72,7 @@ namespace FamilyExpenses
             {
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
+                Core.Dispatcher = rootFrame.Dispatcher;
 
                 // TODO: change this value to a cache size that is appropriate for your application
                 rootFrame.CacheSize = 1;
@@ -73,6 +84,11 @@ namespace FamilyExpenses
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
+
+                Core.Syncronize();
+                var timer = new DispatcherTimer {Interval = TimeSpan.FromMinutes(30)};
+                timer.Tick += delegate { Core.Syncronize(); };
+                timer.Start();
             }
             
             if (rootFrame.Content == null)
@@ -101,6 +117,16 @@ namespace FamilyExpenses
 
             // Ensure the current window is active
             Window.Current.Activate();
+            Core.Busy.StatusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+/*
+            
+            statusBar.BackgroundColor = (Current.Resources["PhoneAccentBrush"] as SolidColorBrush).Color;
+            statusBar.BackgroundOpacity = 1;
+
+            // Set the text on the ProgressIndicator, and show it.
+            statusBar.ProgressIndicator.Text = "My cool app";
+            statusBar.ProgressIndicator.ShowAsync();
+*/
         }
 
         /// <summary>
