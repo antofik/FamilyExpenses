@@ -8,6 +8,24 @@ namespace FamilyExpenses.Models
     [DataContract]
     public class Entry : INotifyPropertyChanged
     {
+        #region Id
+
+        private Guid _id;
+
+        [DataMember]
+        public Guid Id
+        {
+            get { return _id; }
+            set
+            {
+                if (value == _id) return;
+                _id = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
         #region Cost
 
         private double _cost;
@@ -20,6 +38,24 @@ namespace FamilyExpenses.Models
             {
                 if (value == _cost) return;
                 _cost = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
+        #region Revision
+
+        private long _revision;
+
+        [DataMember]
+        public long Revision
+        {
+            get { return _revision; }
+            set
+            {
+                if (value == _revision) return;
+                _revision = value;
                 OnPropertyChanged();
             }
         }
@@ -44,6 +80,24 @@ namespace FamilyExpenses.Models
 
         #endregion
 
+        #region Owner
+
+        private string _owner;
+
+        [DataMember]
+        public string Owner
+        {
+            get { return _owner; }
+            set
+            {
+                if (value == _owner) return;
+                _owner = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
         #region Date
 
         private DateTime _date;
@@ -62,6 +116,17 @@ namespace FamilyExpenses.Models
 
         #endregion
 
+        public bool Modified;
+
+        private static readonly DateTime Zero = new DateTime(1970,1,1).ToLocalTime();
+
+        [DataMember]
+        public double Timestamp
+        {
+            get { return (Date-Zero).TotalSeconds; }
+            set { }
+        }
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

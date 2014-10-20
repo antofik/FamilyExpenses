@@ -4,6 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using FamilyExpenses.Common;
 
 namespace FamilyExpenses.Models
 {
@@ -24,11 +28,27 @@ namespace FamilyExpenses.Models
         public List<Expense> Expenses { get; set; }
 
         public double Total { get; set; }
+
+        public ICommand Goto
+        {
+            get 
+            { 
+                return new RelayCommand(() => ((Frame) Window.Current.Content).Navigate(typeof (MonthReport), this));
+            }
+        }
     }
 
     public class Expense
     {
         public string Name { get; set; }
         public double Cost { get; set; }
+
+        public ICommand Goto
+        {
+            get
+            {
+                return new RelayCommand(() => ((Frame)Window.Current.Content).Navigate(typeof(CategoryReport), Name));
+            }
+        }
     }
 }

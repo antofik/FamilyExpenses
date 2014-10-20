@@ -36,6 +36,8 @@ namespace FamilyExpenses.CoreModules
                         Core.Entries = new ObservableCollection<Entry>();
                     }
                     callback();
+
+                    Core.Syncronize();
                 }
             }
         }
@@ -48,7 +50,7 @@ namespace FamilyExpenses.CoreModules
 
         public async void Save()
         {
-            var value = Serialize(Core.Entries);
+            var value = Serialize((object)Core.Entries);
             var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("entries", CreationCollisionOption.ReplaceExisting);
             using (var read = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
@@ -57,6 +59,7 @@ namespace FamilyExpenses.CoreModules
                     stream.Write(value, 0, value.Length);
                 }
             }
+            Core.Syncronize();
         }
 
         public T Deserialize<T>(byte[] bytes)
@@ -69,6 +72,12 @@ namespace FamilyExpenses.CoreModules
 
         }
 
+        public string Serialize<T>(T obj) where T : class
+        {
+            var bytes = Serialize((object)obj);
+            return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+        }
+
         public byte[] Serialize(object obj)
         {
             var type = obj.GetType();
@@ -78,15 +87,6 @@ namespace FamilyExpenses.CoreModules
                 serializer.WriteObject(stream, obj);
                 return stream.ToArray();
             }
-        }
-
-
-        /// <summary>
-        /// Syncronize data with server
-        /// </summary>
-        public void Sync()
-        {
-            
         }
     }
 }

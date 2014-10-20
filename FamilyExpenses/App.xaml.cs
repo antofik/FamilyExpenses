@@ -8,6 +8,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Phone.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -73,7 +74,7 @@ namespace FamilyExpenses
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
-
+            
             if (rootFrame.Content == null)
             {
                 // Removes the turnstile navigation for startup.

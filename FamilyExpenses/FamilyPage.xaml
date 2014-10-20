@@ -1,0 +1,33 @@
+﻿<UserControl
+    x:Class="FamilyExpenses.FamilyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FamilyExpenses"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <Grid Margin="8,0" Background="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Text="Уникальный пароль семьи" Style="{StaticResource SubheaderTextBlockStyle}" Grid.ColumnSpan="10" />
+        <TextBox x:Name="txtPassword" Text="" Grid.Row="1" VerticalAlignment="Center" Grid.Column="0" />
+        <Button Grid.Row="1" Grid.Column="1" x:Name="cmdSave" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" MinWidth="0" MinHeight="0" Margin="8,0,0,0" BorderThickness="0">
+            <Image Source="Images/save.png" Stretch="None" />
+        </Button>
+        <TextBlock TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Text="Придумайте уникальный пароль и раздайте его всем членам семьи. Тогда у всех вас будет общая статистика" />
+        <TextBlock Margin="0,24" TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3" Text="Оставьте поле пустым, и приложение не бдует использовать синхронизацию через интернет" />
+    </Grid>
+</UserControl>

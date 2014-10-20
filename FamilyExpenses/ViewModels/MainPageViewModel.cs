@@ -6,7 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Windows.Input;
+using Windows.Phone.UI.Input;
+using Windows.System.Profile;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using FamilyExpenses.CoreModules;
@@ -28,20 +32,38 @@ namespace FamilyExpenses.ViewModels
         public void Initialize(MainPage view)
         {
             _view = view;
-            Core.Storage.Load(UpdateHistory);
+            Core.Storage.Load(() =>
+            {
+                UpdateHistory();
+                UpdateCategory();
+                
+                HardwareButtons.BackPressed += (s, e) =>
+                {
+                    if (Category != null)
+                    {
+                        e.Handled = true;
+                        Category = null;
+                    }
+                };
+            });
         }
 
-        private void Save()
+        private async void Save()
         {
+
             if (Cost == null) return;
             var category = string.Join(";", _view.list.SelectedItems.OfType<Category>().Select(c => c.Name));
             if (string.IsNullOrEmpty(category)) return;
 
             var entry = new Entry
             {
+                Id = Guid.NewGuid(),
+                Revision = 0,
                 Categories = string.Join(";", _view.list.SelectedItems.OfType<Category>().Select(c => c.Name)),
                 Cost = Cost ?? 0,
-                Date = DateTime.Now
+                Date = DateTime.Now,
+                Owner = Core.PhoneId,
+                Modified = true
             };
 
             Core.Storage.AddEntry(entry);
@@ -49,6 +71,16 @@ namespace FamilyExpenses.ViewModels
             _view.txtCost.Focus(FocusState.Programmatic);
             _view.list.SelectedItem = null;
             UpdateHistory();
+        }
+
+        private void Settings()
+        {
+            _view.Frame.Navigate(typeof (SettingsPage), this);
+        }
+
+        private void Sync()
+        {
+            Core.Syncronize();
         }
 
         private void UpdateHistory()
@@ -94,6 +126,40 @@ namespace FamilyExpenses.ViewModels
             get { return Core.Entries; }
         }
 
+        #region Category
+
+        private Category _category;
+
+        public Category Category
+        {
+            get { return _category; }
+            set
+            {
+                if (_category == value) return;
+                _category = value;
+                OnPropertyChanged();
+
+                UpdateCategory();
+            }
+        }
+
+        private void UpdateCategory()
+        {
+            if (Category != null)
+            {
+                _view.panelCost.Visibility = Visibility.Visible;
+                _view.txtCost.Focus(FocusState.Programmatic);
+                _view.list.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                _view.panelCost.Visibility = Visibility.Collapsed;
+                _view.list.Visibility = Visibility.Visible;
+            }
+        }
+
+        #endregion
+
         #region History
 
         private ObservableCollection<History> _expensesHistory = new ObservableCollection<History>();
@@ -131,6 +197,8 @@ namespace FamilyExpenses.ViewModels
         private MainPage _view;
 
         public ICommand SaveCommand { get { return new RelayCommand(Save); } }
+        public ICommand SyncCommand { get { return new RelayCommand(Sync); } }
+        public ICommand SettingsCommand { get { return new RelayCommand(Settings); } }
 
         #region INotifyPropertyChanged
 
