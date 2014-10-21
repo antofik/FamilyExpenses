@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using Windows.UI;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Popups;
 using Windows.UI.Xaml.Navigation;
-using FamilyExpenses.CoreModules;
 using FamilyExpenses.ViewModels;
 
 namespace FamilyExpenses
@@ -28,7 +22,8 @@ namespace FamilyExpenses
             }
             catch (Exception ex)
             {
-                Debugger.Break();
+                var d = new MessageDialog("Error while initializing application\n" + ex, "Fatal error");
+                d.ShowAsync();
             }
         }
     }

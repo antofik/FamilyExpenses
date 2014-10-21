@@ -22,11 +22,9 @@ namespace FamilyExpenses.ViewModels
     {
         public MainPageViewModel()
         {
-#if DEBUG
             const string names = "Еда;Дорога;Дети;Подарки;Одежда;Лечение;Личное;Квартира;Другое";
             foreach(var name in names.Split(new[]{';'}))
                 Categories.Add(new Category(name));
-#endif
             Core.Updated += UpdateHistory;
         }
 
@@ -205,7 +203,7 @@ namespace FamilyExpenses.ViewModels
             {
                 return new RelayCommand(() =>
                 {
-                    Core.Storage.Revision = (DateTime.Now - Entry.Zero).TotalSeconds - TimeSpan.FromDays(3).TotalSeconds;
+                    Core.Storage.Revision = (DateTime.Now - Entry.Zero).TotalSeconds - TimeSpan.FromMinutes(10).TotalSeconds;
                     Sync();
                 });
             }

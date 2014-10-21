@@ -41,6 +41,15 @@ namespace FamilyExpenses
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
             this.Resuming += (s, e) => Core.Syncronize();
+            UnhandledException += (s, e) =>
+            {
+                var flyout = new Flyout {Content = new TextBlock{Text = "Unhandler error\n" + e.Message + "\n" + e.Exception}};
+                flyout.Content.Tapped += delegate
+                {
+                    flyout.Hide();
+                };
+                flyout.ShowAt(Window.Current.Content as Frame);
+            };
         }
 
         protected override void OnActivated(IActivatedEventArgs args)

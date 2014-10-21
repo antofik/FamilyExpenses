@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="40671antofik.33266CE9A6068" Publisher="CN=B22414E4-F677-4803-B5E4-B2D04A5AFC91" Version="1.1.0.0" />
+  <Identity Name="40671antofik.33266CE9A6068" Publisher="CN=B22414E4-F677-4803-B5E4-B2D04A5AFC91" Version="1.1.0.2" />
   <mp:PhoneIdentity PhoneProductId="593b0711-eefb-482e-b25b-957b3de26c08" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Семейные расходы</DisplayName>
@@ -16,7 +16,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="FamilyExpenses.App">
-      <m3:VisualElements DisplayName="Семейные расходы" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Если у вас большая семья, и хочется узнать, куда уходят деньги, тогда вам сюда :) Каждый член семьи вводит свои расходы, и все видят суммарный результат, в разбивке по месяцам, по категориям, и так далее." ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="Семейные расходы" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Минималистичная система ведения отчёта потраченных денег. Синхронизация по сети для случая семейного бюджета." ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
         </m3:DefaultTile>
         <m3:SplashScreen Image="Assets\SplashScreen.png" />

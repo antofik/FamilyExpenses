@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.System.Profile;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using FamilyExpenses.Models;
 
@@ -22,7 +23,7 @@ namespace FamilyExpenses.CoreModules
 #if DEBUG
         private const string Server = "http://meimew.com";
 #else
-        private const string Server = "http://localhost:8000";
+        private const string Server = "http://meimew.com";
 #endif
 
         public static readonly StorageImpl Storage = new StorageImpl();
@@ -78,6 +79,7 @@ namespace FamilyExpenses.CoreModules
             {
                 Storage.FamilyPassword = value;
                 Storage.Revision = 0;
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, Entries.Clear);
                 Syncronize();
             }
             else
@@ -124,59 +126,66 @@ namespace FamilyExpenses.CoreModules
 
         private static async Task _syncronize()
         {
-            var client = new HttpClient();
-
-            var entries = Entries.Where(c => c.Modified)
-                .Select(c => new EntryDTO
-                {
-                    Id = c.Id,
-                    Revision = c.Revision,
-                    Owner = c.Owner,
-                    FamilyPassword = Storage.FamilyPassword,
-                    Data = Storage.Serialize(c)
-                })
-                .ToList();
-            var data = Storage.Serialize(entries);
-
-            var content = new MultipartFormDataContent
+            try
             {
-                {new StringContent(PhoneId), "PhoneId"},
-                {new StringContent(Storage.FamilyPassword), "FamilyPassword"},
-                {new StringContent(Storage.Revision.ToString(CultureInfo.InvariantCulture)), "Revision"},
-                {new StringContent(data), "Data"},
-            };
-            var result = await client.PostAsync(new Uri(Server + "/family-expenses"), content);
-            if (result.IsSuccessStatusCode)
-            {
-                var json = await result.Content.ReadAsStringAsync();
-                var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
-                Storage.Revision = list.Revision;
-                foreach (var str in list.Data)
+                var client = new HttpClient();
+
+                var entries = Entries.Where(c => c.Modified)
+                    .Select(c => new EntryDTO
+                    {
+                        Id = c.Id,
+                        Revision = c.Revision,
+                        Owner = c.Owner,
+                        FamilyPassword = Storage.FamilyPassword,
+                        Data = Storage.Serialize(c)
+                    })
+                    .ToList();
+                var data = Storage.Serialize(entries);
+
+                var content = new MultipartFormDataContent
                 {
-                    var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
-                    var existant = Entries.FirstOrDefault(c => c.Id == entry.Id);
-                    if (existant != null)
+                    {new StringContent(PhoneId), "PhoneId"},
+                    {new StringContent(Storage.FamilyPassword), "FamilyPassword"},
+                    {new StringContent(Storage.Revision.ToString(CultureInfo.InvariantCulture)), "Revision"},
+                    {new StringContent(data), "Data"},
+                };
+                var result = await client.PostAsync(new Uri(Server + "/family-expenses"), content);
+                if (result.IsSuccessStatusCode)
+                {
+                    var json = await result.Content.ReadAsStringAsync();
+                    var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
+                    Storage.Revision = list.Revision;
+                    foreach (var str in list.Data)
                     {
-                        existant.Categories = entry.Categories;
-                        existant.Cost = entry.Cost;
-                        existant.Owner = entry.Owner;
-                        existant.Revision = entry.Revision;
-                        existant.Date = entry.Date;
-                        existant.Modified = false;
+                        var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
+                        var existant = Entries.FirstOrDefault(c => c.Id == entry.Id);
+                        if (existant != null)
+                        {
+                            existant.Categories = entry.Categories;
+                            existant.Cost = entry.Cost;
+                            existant.Owner = entry.Owner;
+                            existant.Revision = entry.Revision;
+                            existant.Date = entry.Date;
+                            existant.Modified = false;
+                        }
+                        else
+                        {
+                            entry.Modified = false;
+                            Entries.Add(entry);
+                        }
                     }
-                    else
-                    {
-                        entry.Modified = false;
-                        Entries.Add(entry);
-                    }
+                    Storage.Save();
+                    Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
                 }
-                Storage.Save();
-                Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
+                else
+                {
+                    //todo log error
+                    var str = await result.Content.ReadAsStringAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                //todo log error
-                var str = await result.Content.ReadAsStringAsync();
+                new MessageDialog("Error while sync\n" + ex, "Fatal error").ShowAsync();
             }
         }
     }

@@ -64,7 +64,6 @@ namespace FamilyExpenses.CoreModules
             }
             catch (Exception ex)
             {
-                //TODO log
                 return default(T);
             }
         }
