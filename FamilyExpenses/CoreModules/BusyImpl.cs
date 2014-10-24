@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
 
 namespace FamilyExpenses.CoreModules
 {
@@ -15,6 +11,8 @@ namespace FamilyExpenses.CoreModules
     {
         private BusyModes _mode = BusyModes.None;
         public StatusBar StatusBar { get; set; }
+
+        private string ErrorMessage;
 
         public void Set(BusyModes mode)
         {
@@ -29,15 +27,22 @@ namespace FamilyExpenses.CoreModules
             _check();
         }
 
-        private StatusBar _bar = StatusBar.GetForCurrentView();
-
         private async void _check()
         {
             if (_mode == BusyModes.None)
             {
                 Core.Dispatcher.RunAsync(CoreDispatcherPriority.Low, delegate
                 {
-                    StatusBar.ProgressIndicator.HideAsync();
+                    if (string.IsNullOrEmpty(ErrorMessage))
+                        StatusBar.ProgressIndicator.HideAsync();
+                    else
+                    {
+                        StatusBar.BackgroundOpacity = 1;
+                        StatusBar.ProgressIndicator.Text = ErrorMessage;
+                        StatusBar.ForegroundColor = Colors.Red;
+                        StatusBar.ProgressIndicator.ProgressValue = 0;
+                        StatusBar.ProgressIndicator.ShowAsync();
+                    }
                 });
             }
             else
@@ -54,9 +59,23 @@ namespace FamilyExpenses.CoreModules
                 {
                     StatusBar.BackgroundOpacity = 1;
                     StatusBar.ProgressIndicator.Text = text;
+                    StatusBar.ProgressIndicator.ProgressValue = null;
+                    StatusBar.ForegroundColor = null;
                     StatusBar.ProgressIndicator.ShowAsync();
                 });
             }
+        }
+
+        public void SetError(string errorMessage)
+        {
+            ErrorMessage = errorMessage;
+            _check();
+        }
+
+        public void ClearError()
+        {
+            ErrorMessage = string.Empty;
+            _check();
         }
     }
 

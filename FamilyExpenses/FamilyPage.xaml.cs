@@ -1,4 +1,5 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
 using FamilyExpenses.CoreModules;
 
 namespace FamilyExpenses
@@ -16,7 +17,15 @@ namespace FamilyExpenses
 
             cmdSave.Click += delegate
             {
-                Core.UpdateFamilyPassword(txtPassword.Text);
+                IsEnabled = false;
+                Core.UpdateFamilyPassword(txtPassword.Text, ok => Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
+                {
+                    IsEnabled = true;
+                    if (!ok)
+                    {
+                        txtPassword.Text = Core.Storage.FamilyPassword;
+                    }
+                }));
             };
         }
     }

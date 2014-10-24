@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.Profile;
 using Windows.UI.Core;
@@ -20,6 +21,8 @@ namespace FamilyExpenses.CoreModules
 {
     public static class Core
     {
+        public const int AsyncTimeout = 5000;
+
 #if DEBUG
         private const string Server = "http://meimew.com";
 #else
@@ -46,9 +49,9 @@ namespace FamilyExpenses.CoreModules
         private static ObservableCollection<Entry> _entries = new ObservableCollection<Entry>();
         public static ObservableCollection<Entry> Entries { get { return _entries; } set { _entries = value; } }
 
-        public static void UpdateFamilyPassword(string value)
+        public static void UpdateFamilyPassword(string value, Action<bool> callback)
         {
-            Task.Run(() => _updatePassword(value));
+            Task.Run(() => _updatePassword(value, callback));
 
         }
 
@@ -62,7 +65,7 @@ namespace FamilyExpenses.CoreModules
         private static bool _syncronizing;
         private static bool _syncronizeOnceMore;
 
-        public static async void _updatePassword(string value)
+        public static async void _updatePassword(string value, Action<bool> callback)
         {
             var client = new HttpClient();
             var content = new MultipartFormDataContent
@@ -81,10 +84,12 @@ namespace FamilyExpenses.CoreModules
                 Storage.Revision = 0;
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, Entries.Clear);
                 Syncronize();
+                callback(true);
             }
             else
             {
-                //TODO show error message
+                Busy.SetError("No internet connection");
+                callback(false);
             }
         }
         
@@ -126,6 +131,7 @@ namespace FamilyExpenses.CoreModules
 
         private static async Task _syncronize()
         {
+            var errorMessage = "";
             try
             {
                 var client = new HttpClient();
@@ -149,43 +155,60 @@ namespace FamilyExpenses.CoreModules
                     {new StringContent(Storage.Revision.ToString(CultureInfo.InvariantCulture)), "Revision"},
                     {new StringContent(data), "Data"},
                 };
-                var result = await client.PostAsync(new Uri(Server + "/family-expenses"), content);
-                if (result.IsSuccessStatusCode)
+
+                var task = client.PostAsync(new Uri(Server + "/family-expenses"), content);
+                if (await Task.WhenAny(task, Task.Delay(AsyncTimeout)) == task)
                 {
-                    var json = await result.Content.ReadAsStringAsync();
-                    var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
-                    Storage.Revision = list.Revision;
-                    foreach (var str in list.Data)
+                    var result = task.Result;
+                    if (result.IsSuccessStatusCode)
                     {
-                        var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
-                        var existant = Entries.FirstOrDefault(c => c.Id == entry.Id);
-                        if (existant != null)
+                        var json = await result.Content.ReadAsStringAsync();
+                        var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
+                        Storage.Revision = list.Revision;
+                        foreach (var str in list.Data)
                         {
-                            existant.Categories = entry.Categories;
-                            existant.Cost = entry.Cost;
-                            existant.Owner = entry.Owner;
-                            existant.Revision = entry.Revision;
-                            existant.Date = entry.Date;
-                            existant.Modified = false;
+                            var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
+                            var existant = Entries.FirstOrDefault(c => c.Id == entry.Id);
+                            if (existant != null)
+                            {
+                                existant.Categories = entry.Categories;
+                                existant.Cost = entry.Cost;
+                                existant.Owner = entry.Owner;
+                                existant.Revision = entry.Revision;
+                                existant.Date = entry.Date;
+                                existant.Modified = false;
+                            }
+                            else
+                            {
+                                entry.Modified = false;
+                                Entries.Add(entry);
+                            }
                         }
-                        else
-                        {
-                            entry.Modified = false;
-                            Entries.Add(entry);
-                        }
+                        Storage.Save();
+                        Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
                     }
-                    Storage.Save();
-                    Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
+                    else
+                    {
+                        errorMessage = await result.Content.ReadAsStringAsync();
+                    }
                 }
                 else
                 {
-                    //todo log error
-                    var str = await result.Content.ReadAsStringAsync();
+                    errorMessage = "No internet connection";
                 }
             }
             catch (Exception ex)
             {
+                errorMessage = "Error while sync: " + ex.Message;
                 new MessageDialog("Error while sync\n" + ex, "Fatal error").ShowAsync();
+            }
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                Busy.SetError(errorMessage);
+            }
+            else
+            {
+                Busy.ClearError();
             }
         }
     }
