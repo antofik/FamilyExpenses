@@ -32,7 +32,7 @@
         </StackPanel>
 
         <Grid Grid.Row="1" x:Name="ContentRoot" Margin="19,9.5,19,0">
-            <ListView x:Name="list" ItemsSource="{Binding Expenses}" Background="Transparent" Foreground="White">
+            <ListView x:Name="list" ItemsSource="{Binding Expenses}" Background="Transparent">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Margin="0,0,0,24">
@@ -44,7 +44,7 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <TextBlock Text="{Binding Date}" Margin="0,0,0,12" FontSize="{StaticResource TextStyleExtraExtraLargeFontSize}" />
-                            <ListView Grid.Row="1" Background="Transparent" Foreground="Gainsboro" ItemsSource="{Binding Items}">
+                            <ListView Grid.Row="1" Background="Transparent" ItemsSource="{Binding Items}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">

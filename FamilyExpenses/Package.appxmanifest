@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="40671antofik.33266CE9A6068" Publisher="CN=B22414E4-F677-4803-B5E4-B2D04A5AFC91" Version="1.1.0.2" />
+  <Identity Name="40671antofik.33266CE9A6068" Publisher="CN=B22414E4-F677-4803-B5E4-B2D04A5AFC91" Version="1.1.0.3" />
   <mp:PhoneIdentity PhoneProductId="593b0711-eefb-482e-b25b-957b3de26c08" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Семейные расходы</DisplayName>

@@ -9,7 +9,7 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
-    <Grid Margin="8,0" Background="Black">
+    <Grid Margin="8,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -25,7 +25,7 @@
         <TextBlock Grid.Row="0" Text="Уникальный пароль семьи" Style="{StaticResource SubheaderTextBlockStyle}" Grid.ColumnSpan="10" />
         <TextBox x:Name="txtPassword" Text="" Grid.Row="1" VerticalAlignment="Center" Grid.Column="0" />
         <Button Grid.Row="1" Grid.Column="1" x:Name="cmdSave" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" MinWidth="0" MinHeight="0" Margin="8,0,0,0" BorderThickness="0">
-            <Image Source="Images/save.png" Stretch="None" />
+            <SymbolIcon Symbol="Save"  />
         </Button>
         <TextBlock TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Text="Придумайте уникальный пароль и раздайте его всем членам семьи. Тогда у всех вас будет общая статистика" />
         <TextBlock Margin="0,24" TextWrapping="WrapWholeWords"  Style="{StaticResource TitleTextBlockStyle}" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3" Text="Оставьте поле пустым, и приложение не будет использовать синхронизацию через интернет" />

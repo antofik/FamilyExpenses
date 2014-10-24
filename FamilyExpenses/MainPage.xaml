@@ -109,7 +109,7 @@
                     x:FieldModifier="internal"
                     Margin="4,0"
                     Background="Transparent"
-                    Foreground="White"
+                    Foreground="{StaticResource ApplicationHeaderForegroundThemeBrush}"
                     SelectedItem="{Binding Category, Mode=TwoWay}"
                     >
                 </ListBox>
