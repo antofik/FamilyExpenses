@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Windows.Input;
 using Windows.Phone.UI.Input;
-using Windows.System.Profile;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using FamilyExpenses.CoreModules;
 using FamilyExpenses.Models;
 
@@ -31,34 +24,36 @@ namespace FamilyExpenses.ViewModels
         public void Initialize(MainPage view)
         {
             _view = view;
+            view.Loaded += delegate { HardwareButtons.BackPressed += OnBackPressed; };
+            view.Unloaded += delegate { HardwareButtons.BackPressed -= OnBackPressed; };
+
             Core.Storage.Load(() =>
             {
                 UpdateHistory();
                 UpdateCategory();
-                
-                HardwareButtons.BackPressed += (s, e) =>
-                {
-                    if (Category != null)
-                    {
-                        e.Handled = true;
-                        Category = null;
-                    }
-                };
             });
         }
 
-        private async void Save()
+        private void OnBackPressed(object s, BackPressedEventArgs e)
         {
+            if (Category == null) return;
+            e.Handled = true;
+            Category = null;
+        }
 
+        private void Save()
+        {
             if (Cost == null) return;
             var category = string.Join(";", _view.list.SelectedItems.OfType<Category>().Select(c => c.Name));
             if (string.IsNullOrEmpty(category)) return;
+
+            Core.Log.Add("Adding {0} {1}p. {2}", category, Cost, Core.PhoneId);
 
             var entry = new Entry
             {
                 Id = Guid.NewGuid(),
                 Revision = 0,
-                Categories = string.Join(";", _view.list.SelectedItems.OfType<Category>().Select(c => c.Name)),
+                Categories = category,
                 Cost = Cost ?? 0,
                 Date = DateTime.Now,
                 Owner = Core.PhoneId,

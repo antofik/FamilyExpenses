@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using FamilyExpenses.CoreModules;
 
 namespace FamilyExpenses.Models
 {
@@ -116,7 +117,8 @@ namespace FamilyExpenses.Models
 
         #endregion
 
-        public bool Modified;
+        [DataMember]
+        public bool Modified { get; set; }
 
         public static readonly DateTime Zero = new DateTime(1970,1,1).ToLocalTime();
 
@@ -126,7 +128,12 @@ namespace FamilyExpenses.Models
             get { return (Date-Zero).TotalSeconds; }
             set { }
         }
-        
+
+        public bool IsMine
+        {
+            get { return Owner == Core.PhoneId; }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

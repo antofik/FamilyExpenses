@@ -52,7 +52,7 @@ namespace FamilyExpenses.CoreModules
             Settings.Values["Entries"] = value;
         }
 
-        public T Deserialize<T>(byte[] bytes)
+        public T Deserialize<T>(byte[] bytes, T defaultValue = default(T))
         {
             try
             {
@@ -64,7 +64,7 @@ namespace FamilyExpenses.CoreModules
             }
             catch (Exception ex)
             {
-                return default(T);
+                return defaultValue;
             }
         }
 
@@ -82,6 +82,25 @@ namespace FamilyExpenses.CoreModules
             {
                 serializer.WriteObject(stream, obj);
                 return stream.ToArray();
+            }
+        }
+
+        public void Save<T>(string name, T data) where T: class
+        {
+            var str = Serialize(data);
+            Settings.Values[name] = str;
+        }
+
+        public T Load<T>(string name, T defaultValue = default(T))
+        {
+            try
+            {
+                var str = (string) Settings.Values[name];
+                return Deserialize(Encoding.UTF8.GetBytes(str), defaultValue);
+            }
+            catch (Exception)
+            {
+                return defaultValue;
             }
         }
     }

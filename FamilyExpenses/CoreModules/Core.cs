@@ -15,6 +15,7 @@ using Windows.System.Profile;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
+using FamilyExpenses.Common;
 using FamilyExpenses.Models;
 
 namespace FamilyExpenses.CoreModules
@@ -32,6 +33,8 @@ namespace FamilyExpenses.CoreModules
         public static readonly StorageImpl Storage = new StorageImpl();
 
         public static readonly BusyImpl Busy = new BusyImpl();
+
+        public static readonly LogHelper Log = new LogHelper();
 
         public static readonly string PhoneId = string.Join("", HardwareIdentification.GetPackageSpecificToken(null).Id.ToArray().Select(c => c.ToString("X")));
 
@@ -74,39 +77,60 @@ namespace FamilyExpenses.CoreModules
                 {new StringContent(value), "FamilyPassword"},
             };
 
-            Busy.Set(BusyModes.UpdateFamilyPassword);
-            var result = await client.PostAsync(new Uri(Server + "/family-expenses/change-family"), content);
-            Busy.Clear(BusyModes.UpdateFamilyPassword);
+            Log.Add("Updating password from {0} to {1}", Storage.FamilyPassword, value);
 
-            if (result.IsSuccessStatusCode)
+            Busy.Set(BusyModes.UpdateFamilyPassword);
+            var task = client.PostAsync(new Uri(Server + "/family-expenses/change-family"), content);
+            if (await Task.WhenAny(task, Task.Delay(AsyncTimeout)) == task)
             {
-                Storage.FamilyPassword = value;
-                Storage.Revision = 0;
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, Entries.Clear);
-                Syncronize();
-                callback(true);
+                Busy.Clear(BusyModes.UpdateFamilyPassword);
+
+                var result = task.Result;
+
+                if (result.IsSuccessStatusCode)
+                {
+                    Log.Add("Successfully update from {0} to {1}", Storage.FamilyPassword, value);
+                    Storage.FamilyPassword = value;
+                    Storage.Revision = 0;
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        // remove items of other people
+                        var othersItems = Entries.Where(c => !c.IsMine).ToList();
+                        foreach (var item in othersItems)
+                            Entries.Remove(item);
+                        foreach (var item in Entries)
+                            item.Modified = true;
+                    });
+                    Syncronize();
+                    callback(true);
+                }
+                else
+                {
+                    Busy.SetError("No internet connection");
+                    callback(false);
+                }
             }
             else
             {
-                Busy.SetError("No internet connection");
+                Busy.Clear(BusyModes.UpdateFamilyPassword);
                 callback(false);
             }
         }
         
-        public static void Syncronize()
+        public static void Syncronize(bool check = true)
         {
-            if (string.IsNullOrWhiteSpace(Storage.FamilyPassword)) return;
+            if (check && string.IsNullOrWhiteSpace(Storage.FamilyPassword)) return;
             Task.Run(() => SyncronizeAsync());
         }
 
-        private static async void SyncronizeAsync()
+        private static async Task<bool> SyncronizeAsync()
         {
             lock (_syncRoot)
             {
                 if (_syncronizing)
                 {
                     _syncronizeOnceMore = true;
-                    return;
+                    return false;
                 }
                 _syncronizeOnceMore = false;
                 _syncronizing = true;
@@ -115,11 +139,11 @@ namespace FamilyExpenses.CoreModules
 
             Busy.Set(BusyModes.Sync);
 
-            await _syncronize();
-            while (_syncronizeOnceMore)
+            var ok = await _syncronize();
+            while (ok && _syncronizeOnceMore)
             {
                 _syncronizeOnceMore = false;
-                await _syncronize();
+                ok = await _syncronize();
             }
             Busy.Clear(BusyModes.Sync);
 
@@ -127,13 +151,15 @@ namespace FamilyExpenses.CoreModules
             {
                 _syncronizing = false;
             }
+            return ok;
         }
 
-        private static async Task _syncronize()
+        private static async Task<bool> _syncronize()
         {
             var errorMessage = "";
             try
             {
+                Log.Add("Start syncronizing");
                 var client = new HttpClient();
 
                 var entries = Entries.Where(c => c.Modified)
@@ -146,6 +172,7 @@ namespace FamilyExpenses.CoreModules
                         Data = Storage.Serialize(c)
                     })
                     .ToList();
+                Log.Add("Items to upload: {0}", entries.Count);
                 var data = Storage.Serialize(entries);
 
                 var content = new MultipartFormDataContent
@@ -164,10 +191,12 @@ namespace FamilyExpenses.CoreModules
                     {
                         var json = await result.Content.ReadAsStringAsync();
                         var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
+                        Log.Add("Successfuly syncronized to {0} revision", list.Revision);
                         Storage.Revision = list.Revision;
                         foreach (var str in list.Data)
                         {
                             var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));
+                            Log.Add("    item {0} {1} {2} {3} {4}", entry.Id, entry.Categories, entry.Cost, entry.Date, entry.IsMine ? "mine" : "others");
                             var existant = Entries.FirstOrDefault(c => c.Id == entry.Id);
                             if (existant != null)
                             {
@@ -177,39 +206,44 @@ namespace FamilyExpenses.CoreModules
                                 existant.Revision = entry.Revision;
                                 existant.Date = entry.Date;
                                 existant.Modified = false;
+                                Log.Add("      - exists");
                             }
                             else
                             {
                                 entry.Modified = false;
                                 Entries.Add(entry);
+                                Log.Add("      - new");
                             }
                         }
                         Storage.Save();
+                        Log.Add("Sync finished.");
                         Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Updated());
                     }
                     else
                     {
                         errorMessage = await result.Content.ReadAsStringAsync();
+                        Log.Add("Error in sync service: {0}", errorMessage);
                     }
                 }
                 else
                 {
                     errorMessage = "No internet connection";
+                    Log.Add("Cannot sync: no internet");
                 }
             }
             catch (Exception ex)
             {
                 errorMessage = "Error while sync: " + ex.Message;
+                Log.Add("Error while sync: {0}", ex);
                 new MessageDialog("Error while sync\n" + ex, "Fatal error").ShowAsync();
             }
             if (!string.IsNullOrEmpty(errorMessage))
             {
                 Busy.SetError(errorMessage);
+                return false;
             }
-            else
-            {
-                Busy.ClearError();
-            }
+            Busy.ClearError();
+            return true;
         }
     }
 

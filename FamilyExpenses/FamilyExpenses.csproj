@@ -91,6 +91,7 @@
     <Compile Include="CategoryReport.xaml.cs">
       <DependentUpon>CategoryReport.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Common\LogHelper.cs" />
     <Compile Include="Common\NavigationHelper.cs" />
     <Compile Include="Common\ObservableDictionary.cs" />
     <Compile Include="Common\RelayCommand.cs" />
@@ -102,6 +103,9 @@
     <Compile Include="CoreModules\StorageImpl.cs" />
     <Compile Include="FamilyPage.xaml.cs">
       <DependentUpon>FamilyPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LogPage.xaml.cs">
+      <DependentUpon>LogPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -151,6 +155,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="FamilyPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LogPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

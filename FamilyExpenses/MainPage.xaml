@@ -91,6 +91,7 @@
                         Command="{Binding SaveCommand}"
                         />
                     <TextBlock
+                        x:Name="txtLog"
                         Margin="8,8,100,0"
                         Grid.Row="2"
                         HorizontalAlignment="Left"
