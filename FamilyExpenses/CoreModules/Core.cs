@@ -42,15 +42,15 @@ namespace FamilyExpenses.CoreModules
 
         #region Categories
 
-        private static ObservableCollection<Category> _categories = new ObservableCollection<Category>();
-        public static ObservableCollection<Category> Categories { get { return _categories; } }
+        private static readonly ObservableCollection<Category> _categories = new ObservableCollection<Category>();
+        public static ObservableCollection<Category> Categories { get { return _categories; }  }
 
         #endregion
 
         #region Entries
 
         private static ObservableCollection<Entry> _entries = new ObservableCollection<Entry>();
-        public static ObservableCollection<Entry> Entries { get { return _entries; } set { _entries = value; } }
+        public static ObservableCollection<Entry> Entries { get { return _entries; } }
 
         public static void UpdateFamilyPassword(string value, Action<bool> callback)
         {
@@ -59,6 +59,12 @@ namespace FamilyExpenses.CoreModules
         }
 
         public static event Action Updated = delegate{};
+        public static event Action Refresh = delegate{};
+
+        public static void InvokeRefresh()
+        {
+            Refresh();
+        }
 
         #endregion
         
@@ -89,15 +95,17 @@ namespace FamilyExpenses.CoreModules
 
                 if (result.IsSuccessStatusCode)
                 {
+                    Busy.ClearError();
                     Log.Add("Successfully update from {0} to {1}", Storage.FamilyPassword, value);
-                    Storage.FamilyPassword = value;
-                    Storage.Revision = 0;
+                    Storage.SetFamilyPassword(value);
+                    Storage.SetRevision(0);
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         // remove items of other people
                         var othersItems = Entries.Where(c => !c.IsMine).ToList();
                         foreach (var item in othersItems)
                             Entries.Remove(item);
+                        // and mark all my items as modified
                         foreach (var item in Entries)
                             item.Modified = true;
                     });
@@ -139,12 +147,22 @@ namespace FamilyExpenses.CoreModules
 
             Busy.Set(BusyModes.Sync);
 
-            var ok = await _syncronize();
-            while (ok && _syncronizeOnceMore)
+            bool ok;
+            try
             {
-                _syncronizeOnceMore = false;
                 ok = await _syncronize();
+                while (ok && _syncronizeOnceMore)
+                {
+                    _syncronizeOnceMore = false;
+                    ok = await _syncronize();
+                }
             }
+            catch (Exception ex)
+            {
+                ok = false;
+                Log.Add("Error while syncronizing: {0}", ex);
+            }
+
             Busy.Clear(BusyModes.Sync);
 
             lock (_syncRoot)
@@ -159,7 +177,7 @@ namespace FamilyExpenses.CoreModules
             var errorMessage = "";
             try
             {
-                Log.Add("Start syncronizing");
+                Log.Add("Start syncronizing {0}", Storage.Revision);
                 var client = new HttpClient();
 
                 var entries = Entries.Where(c => c.Modified)
@@ -189,10 +207,12 @@ namespace FamilyExpenses.CoreModules
                     var result = task.Result;
                     if (result.IsSuccessStatusCode)
                     {
+                        Busy.ClearError();
                         var json = await result.Content.ReadAsStringAsync();
                         var list = Storage.Deserialize<ResponseDTO>(Encoding.UTF8.GetBytes(json));
                         Log.Add("Successfuly syncronized to {0} revision", list.Revision);
-                        Storage.Revision = list.Revision;
+                        Log.Add("Received {0} items", list.Data.Count);
+                        Storage.SetRevision(list.Revision);
                         foreach (var str in list.Data)
                         {
                             var entry = Storage.Deserialize<Entry>(Encoding.UTF8.GetBytes(str));

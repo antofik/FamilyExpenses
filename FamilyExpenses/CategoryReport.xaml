@@ -8,7 +8,10 @@
     xmlns:models="using:FamilyExpenses.Models"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    
+    <FrameworkElement.Resources>
+        <local:CostToStringConverter x:Key="CostToStringConverter" />
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </FrameworkElement.Resources>
     <Grid x:Name="LayoutRoot">
 
         <Grid.ChildrenTransitions>
@@ -34,13 +37,15 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ContentControl  FontSize="{StaticResource TextStyleLargeFontSize}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Foreground="OrangeRed" MinWidth="150">
-                                    <Run Text="{Binding Cost}"/><Run Text="р."/>
-                                </TextBlock>
-                                <TextBlock Text="{Binding Month}" />
-                                <TextBlock Text="," Width="15" />
-                                <TextBlock Text="{Binding Year}"  FontSize="{StaticResource TextStyleMediumFontSize}" VerticalAlignment="Bottom" Margin="0" Foreground="Gainsboro" />
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Foreground="OrangeRed" MinWidth="150">
+                                        <Run Text="{Binding Cost, Converter={StaticResource CostToStringConverter}}"/>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Month}" />
+                                    <TextBlock Text="," Width="15" />
+                                    <TextBlock Text="{Binding Year}"  FontSize="{StaticResource TextStyleMediumFontSize}" VerticalAlignment="Bottom" Margin="0" Foreground="Gainsboro" />
+                                </StackPanel>
                             </StackPanel>
                         </ContentControl>
                     </DataTemplate>

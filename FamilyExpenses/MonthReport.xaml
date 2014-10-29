@@ -12,6 +12,10 @@
     <Page.DataContext>
         <models:History />
     </Page.DataContext>
+    <FrameworkElement.Resources>
+        <local:CostToStringConverter x:Key="CostToStringConverter" />
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </FrameworkElement.Resources>
 
     <Grid x:Name="LayoutRoot">
         <Grid.ChildrenTransitions>
@@ -45,18 +49,24 @@
                             </Grid.RowDefinitions>
                             <TextBlock Text="{Binding Date}" Margin="0,0,0,12" FontSize="{StaticResource TextStyleExtraExtraLargeFontSize}" />
                             <ListView Grid.Row="1" Background="Transparent" ItemsSource="{Binding Items}">
+                                <ListView.Resources>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Height" Value="30" />
+                                    </Style>
+                                </ListView.Resources>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Foreground="OrangeRed" FontSize="{StaticResource TextStyleLargeFontSize}" MinWidth="150"><Run Text="{Binding Cost}" /><Run Text="р." /></TextBlock>
+                                            <TextBlock Foreground="OrangeRed" FontSize="{StaticResource TextStyleLargeFontSize}" MinWidth="150"><Run Text="{Binding Cost, Converter={StaticResource CostToStringConverter}}" /></TextBlock>
                                             <TextBlock FontSize="{StaticResource TextStyleLargeFontSize}" Text="{Binding Categories}" />
+                                            <TextBlock FontSize="{StaticResource TextStyleLargeFontSize}" Foreground="Tomato" Text=" (мой)" Visibility="{Binding IsMine, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ListView>
                             <Border Grid.Row="2" HorizontalAlignment="Stretch" BorderBrush="GhostWhite" BorderThickness="1" Opacity="0.4" Margin="0,8,0,0" Width="1000" />
                             <TextBlock Grid.Row="3" Style="{StaticResource SubheaderTextBlockStyle}" HorizontalAlignment="Right">
-                                <Run Text="Всего: " /><Run Foreground="YellowGreen" Text="{Binding Total}" FontWeight="Bold" /><Run Text="р." />
+                                <Run Text="Всего: " /><Run Foreground="YellowGreen" Text="{Binding Total, Converter={StaticResource CostToStringConverter}}" FontWeight="Bold" />
                             </TextBlock>
                             <Border Grid.Row="4" HorizontalAlignment="Stretch" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,8,0,0" Width="1000" />
                         </Grid>

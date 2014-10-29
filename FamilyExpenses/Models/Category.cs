@@ -13,7 +13,16 @@ namespace FamilyExpenses.Models
         }
 
         [DataMember]
-        public string Name { get; set; }
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                if (_name == value) return;
+                _name = value;
+                OnPropertyChanged();
+            }
+        }
 
         [DataMember]
         public int UsageCount { get; set; }
@@ -22,6 +31,7 @@ namespace FamilyExpenses.Models
         #region Selected
 
         private bool _selected;
+        private string _name;
 
         [IgnoreDataMember]
         public bool Selected
@@ -44,5 +54,6 @@ namespace FamilyExpenses.Models
             PropertyChangedEventHandler handler = PropertyChanged;
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
+
     }
 }

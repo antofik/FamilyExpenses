@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 using FamilyExpenses.CoreModules;
@@ -12,7 +9,17 @@ namespace FamilyExpenses.Common
 {
     public class LogHelper
     {
-        private readonly ObservableCollection<HistoryLogItem> _history = Core.Storage.Load("HistoryLog", new ObservableCollection<HistoryLogItem>());
+        public LogHelper()
+        {
+            Initialize();
+        }
+
+        private async void Initialize()
+        {
+            _history = new ObservableCollection<HistoryLogItem>();
+        }
+
+        private ObservableCollection<HistoryLogItem> _history;
         public ObservableCollection<HistoryLogItem> History { get { return _history; } }
 
         public void Add(string message, params object[] parameters)
@@ -38,7 +45,7 @@ namespace FamilyExpenses.Common
         private void Save()
         {
             var data = Core.Storage.Serialize(_history);
-            Core.Storage.Save("HistoryLog", data);
+            //Core.Storage.Save("HistoryLog", data);
         }
     }
 

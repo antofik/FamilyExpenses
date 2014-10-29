@@ -13,22 +13,27 @@
     <Page.BottomAppBar>
         <CommandBar ClosedDisplayMode="Minimal">
             <CommandBar.PrimaryCommands>
-                <AppBarButton IsCompact="True" Command="{Binding SettingsCommand}" Label="Settings">
+                <AppBarButton IsCompact="True" Command="{Binding CategoriesCommand}" Label="Категории">
+                    <AppBarButton.Icon>
+                        <SymbolIcon Symbol="Add" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton IsCompact="True" Command="{Binding SettingsCommand}" Label="Настройки">
                     <AppBarButton.Icon>
                         <SymbolIcon Symbol="Setting" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton IsCompact="True" Command="{Binding SyncCommand}" Label="Sync">
+                <AppBarButton IsCompact="True" Command="{Binding SyncCommand}" Label="Обновить">
                     <AppBarButton.Icon>
                         <SymbolIcon Symbol="Sync" />
                     </AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar.PrimaryCommands> 
-            <CommandBar.SecondaryCommands>
-                <AppBarButton Label="Settings" Command="{Binding SettingsCommand}" />
-            </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
+    <FrameworkElement.Resources>
+        <familyExpenses:CostToStringConverter x:Key="CostToStringConverter" />
+    </FrameworkElement.Resources>
     <FrameworkElement.DataContext>
         <viewModels:MainPageViewModel />
     </FrameworkElement.DataContext>
@@ -46,7 +51,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="0" x:Name="row" />
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="1" x:Name="panelCost" x:FieldModifier="internal">
+                <Grid Grid.Row="1" x:Name="panelCost" x:FieldModifier="internal" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <!--<ColumnDefinition Width="*" />-->
@@ -80,6 +85,8 @@
                         Content="Сохранить" 
                         Grid.Row="2"
                         Width="150"
+                        x:Name="cmdSave"
+                        x:FieldModifier="internal"
                         Height="200"
                         VerticalContentAlignment="Top"
                         Padding="0"
@@ -99,21 +106,27 @@
                         Text="Укажите сумму, которую вы потратили"
                         />
                 </Grid>
-                <ListBox 
+                <familyExpenses:MyListView
                     x:Name="list"
                     IsTabStop="False"            
                     Grid.Row="2"
                     ItemsSource="{Binding Categories}" 
-                    DisplayMemberPath="Name" 
                     SelectionMode="Single" 
-                    FontSize="{StaticResource TextStyleExtraLargeFontSize}" 
                     x:FieldModifier="internal"
                     Margin="4,0"
                     Background="Transparent"
                     Foreground="{StaticResource ApplicationHeaderForegroundThemeBrush}"
                     SelectedItem="{Binding Category, Mode=TwoWay}"
+                    ReorderMode="Disabled"
                     >
-                </ListBox>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,8">
+                                <TextBlock Text="{Binding Name}" FontSize="{StaticResource TextStyleExtraLargeFontSize}"  />
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </familyExpenses:MyListView>
             </Grid>
         </PivotItem>
         
@@ -136,8 +149,8 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Foreground="OrangeRed" MinWidth="100" VerticalAlignment="Center">
-                                                <Run Text="{Binding Cost}" /><Run Text="р." />
+                                            <TextBlock Foreground="OrangeRed" MinWidth="120" VerticalAlignment="Center">
+                                                <Run Text="{Binding Cost, Converter={StaticResource CostToStringConverter}}" />
                                             </TextBlock>
                                             <TextBlock Text=" "  />
                                             <HyperlinkButton Content="{Binding Name}" Command="{Binding Goto}" VerticalAlignment="Center" />
@@ -147,7 +160,7 @@
                             </ItemsControl>
                             <Border Grid.Row="2" HorizontalAlignment="Stretch" BorderBrush="GhostWhite" BorderThickness="1" Opacity="0.4" Margin="0,8,0,0" Width="1000" />
                             <TextBlock Grid.Row="3" Style="{StaticResource SubheaderTextBlockStyle}" HorizontalAlignment="Right">
-                                <Run Text="Всего: " /><Run Foreground="YellowGreen" Text="{Binding Total}" FontWeight="Bold" /><Run Text="р." />
+                                <Run Text="Всего: " /><Run Foreground="YellowGreen" Text="{Binding Total, Converter={StaticResource CostToStringConverter}}" FontWeight="Bold" />
                             </TextBlock>
                             <Border Grid.Row="4" HorizontalAlignment="Stretch" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,8,0,0" Width="1000" />
                         </Grid>

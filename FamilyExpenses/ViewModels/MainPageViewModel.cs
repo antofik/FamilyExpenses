@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Windows.Phone.UI.Input;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using FamilyExpenses.CoreModules;
 using FamilyExpenses.Models;
 
@@ -15,10 +16,8 @@ namespace FamilyExpenses.ViewModels
     {
         public MainPageViewModel()
         {
-            const string names = "Еда;Дорога;Дети;Подарки;Одежда;Лечение;Личное;Квартира;Другое";
-            foreach(var name in names.Split(new[]{';'}))
-                Categories.Add(new Category(name));
             Core.Updated += UpdateHistory;
+            Core.Refresh += UpdateHistory;
         }
 
         public void Initialize(MainPage view)
@@ -31,19 +30,26 @@ namespace FamilyExpenses.ViewModels
             {
                 UpdateHistory();
                 UpdateCategory();
+                Category = Categories.FirstOrDefault();
+                _view.list.Focus(FocusState.Programmatic);
             });
         }
 
         private void OnBackPressed(object s, BackPressedEventArgs e)
         {
-            if (Category == null) return;
+            if (!_categorySelected) return;
             e.Handled = true;
-            Category = null;
+            _categorySelected = false;
+            UpdateCategory();
         }
 
         private void Save()
         {
             if (Cost == null) return;
+            _categorySelected = false;
+            UpdateCategory();
+
+            _view.cmdSave.IsEnabled = false;
             var category = string.Join(";", _view.list.SelectedItems.OfType<Category>().Select(c => c.Name));
             if (string.IsNullOrEmpty(category)) return;
 
@@ -62,19 +68,12 @@ namespace FamilyExpenses.ViewModels
 
             Core.Storage.AddEntry(entry);
             Cost = null;
-            _view.txtCost.Focus(FocusState.Programmatic);
-            _view.list.SelectedItem = null;
             UpdateHistory();
         }
 
         private void Settings()
         {
             _view.Frame.Navigate(typeof (SettingsPage), this);
-        }
-
-        private void Sync()
-        {
-            Core.Syncronize();
         }
 
         private void UpdateHistory()
@@ -132,15 +131,14 @@ namespace FamilyExpenses.ViewModels
                 if (_category == value) return;
                 _category = value;
                 OnPropertyChanged();
-
-                UpdateCategory();
             }
         }
 
         private void UpdateCategory()
         {
-            if (Category != null)
+            if (_categorySelected)
             {
+                _view.cmdSave.IsEnabled = true;
                 _view.panelCost.Visibility = Visibility.Visible;
                 _view.txtCost.Focus(FocusState.Programmatic);
                 _view.list.Visibility = Visibility.Collapsed;
@@ -171,19 +169,35 @@ namespace FamilyExpenses.ViewModels
 
         #endregion
 
-        #region Categories
+        private bool _categorySelected;
+        public void CategorySelected(Category category)
+        {
+            _categorySelected = true;
+            UpdateCategory();
+        }
 
-        private ObservableCollection<Category> _categories = new ObservableCollection<Category>();
+        public void Reorder(Category category)
+        {
+            _view.list.ReorderMode = ListViewReorderMode.Enabled;
+        }
+
+        public void Rename(Category category)
+        {
+            _view.Frame.Navigate(typeof (CategoriesPage), category);
+        }
+
+        public void Delete(Category category)
+        {
+            Core.Categories.Remove(category);
+            Core.Storage.Save();
+        }
+
+
+        #region Categories
 
         public ObservableCollection<Category> Categories
         {
-            get { return _categories; }
-            set
-            {
-                if (_categories == value) return;
-                _categories = value;
-                OnPropertyChanged();
-            }
+            get { return Core.Categories; }
         }
 
         #endregion
@@ -198,13 +212,15 @@ namespace FamilyExpenses.ViewModels
             {
                 return new RelayCommand(() =>
                 {
-                    Core.Storage.Revision = (DateTime.Now - Entry.Zero).TotalSeconds - TimeSpan.FromMinutes(10).TotalSeconds;
-                    Sync();
+                    Core.Storage.SetRevision((DateTime.Now - Entry.Zero).TotalSeconds - TimeSpan.FromMinutes(10).TotalSeconds);
+                    Core.Syncronize();
                 });
             }
         }
 
         public ICommand SettingsCommand { get { return new RelayCommand(Settings); } }
+
+        public ICommand CategoriesCommand { get { return new RelayCommand(() => _view.Frame.Navigate(typeof (CategoriesPage))); } }
 
         #region INotifyPropertyChanged
 

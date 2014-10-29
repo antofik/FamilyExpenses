@@ -2,6 +2,8 @@
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using FamilyExpenses.ViewModels;
@@ -14,12 +16,13 @@ namespace FamilyExpenses
         {
             try
             {
+                var viewmodel = new MainPageViewModel();
+
                 InitializeComponent();
+                viewmodel.Initialize(this);
                 NavigationCacheMode = NavigationCacheMode.Required;
                 Loaded += delegate
                 {
-                    var viewmodel = new MainPageViewModel();
-                    viewmodel.Initialize(this);
                     DataContext = viewmodel;
                 };
                 txtLog.DoubleTapped += delegate
